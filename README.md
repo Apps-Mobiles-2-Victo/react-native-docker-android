@@ -18,4 +18,61 @@ The image preloads the Gradle Wrapper distribution selected by the
 `GRADLE_USER_HOME=/opt/gradle-home`, so `./gradlew` can start without
 downloading Gradle in ephemeral CI containers.
 
+Sous WSL, depuis la racine du dépôt, construire l’image Docker avec le tag
+`react-native-android` :
+
+```sh
+./scripts/build-docker-image-wsl.sh
+```
+
+## Projet de test Hello World Android
+
+Un petit projet React Native utilisant Gradle se trouve dans
+[examples/android-hello-world](./examples/android-hello-world). Il affiche
+« Bonjour Android ! » et inclut les bibliothèques natives pour les architectures
+`arm64-v8a` et `x86_64`.
+
+Depuis la racine du dépôt, construire l’APK autonome (la variante `release`
+embarque le bundle JavaScript, sans serveur Metro) dans l’image Docker :
+
+```sh
+./scripts/build-android-example-wsl.sh
+```
+
+Le fichier produit est
+`examples/android-hello-world/android/app/build/outputs/apk/release/app-release.apk`.
+Avec le débogage USB activé et `adb` installé sur l’ordinateur, connecter le
+téléphone puis installer et lancer l’application :
+
+```sh
+adb devices
+adb install -r examples/android-hello-world/android/app/build/outputs/apk/release/app-release.apk
+adb shell am start -n com.androidphonedemo/.MainActivity
+```
+
+L’APK de test est signé avec la clé de débogage du modèle React Native ; ne pas
+l’utiliser pour une publication.
+
 Original version is split from react-native repo, see https://github.com/facebook/react-native/blob/988366a4179d87d667e5d9396efdfba4cbbe0b2e/ContainerShip/Dockerfile.android-base.
+
+---
+
+NOTES S Trottier
+
+Versions utilisées dans le Dockerfile original: 
+
+Ubuntu 22.04
+Android Platform 37.0
+Build Tools 37.0.0
+NDK 28.2.13676358
+Gradle 9.4.1
+Node.js 22.14
+Yarn (version non fixée)
+JDK 17.
+
+docker build .
+> time to build on Dell laptop: Intel i7 11800H with 32GB RAM, Docker Desktop:  335s
+> image size: 6.5GB
+
+APK résultant: 
+~/repos/AppsMobiles2/react-native-docker-android/examples/android-hello-world/android/app/build/outputs/apk/release/app-release.apk
