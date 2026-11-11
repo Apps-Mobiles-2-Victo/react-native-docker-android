@@ -39,6 +39,9 @@ embarque le bundle JavaScript, sans serveur Metro) dans l’image Docker :
 ./scripts/build-android-example-wsl.sh
 ```
 
+Le script conserve le cache Gradle dans le volume Docker `gradle-home-cache`
+afin de le réutiliser entre les exécutions.
+
 Le fichier produit est
 `examples/android-hello-world/android/app/build/outputs/apk/release/app-release.apk`.
 Avec le débogage USB activé et `adb` installé sur l’ordinateur, connecter le
@@ -76,3 +79,15 @@ docker build .
 
 APK résultant: 
 ~/repos/AppsMobiles2/react-native-docker-android/examples/android-hello-world/android/app/build/outputs/apk/release/app-release.apk
+
+---
+
+Optimisation:
+
+Build arm64-v8a et x86-64
+
+Avec seulement un changement au titre dans App.tsx: 2m28s
+
+-v ~/.gradle/caches:/root/.gradle/caches: 2m18s
+
+Avec un volume Docker pour le home Gradle + --configuration-cache: 19s !!

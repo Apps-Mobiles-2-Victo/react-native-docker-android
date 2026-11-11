@@ -6,6 +6,8 @@ REPO_ROOT="$(cd -- "$SCRIPT_DIR/.." && pwd)"
 EXAMPLE_DIR="$REPO_ROOT/examples/android-hello-world"
 
 docker run --rm --ulimit nofile=10240 \
+  -v gradle-home-cache:/opt/gradle-home \
   -v "$EXAMPLE_DIR:/workspace" \
-  -w /workspace react-native-android \
-  sh -c 'yarn install && cd android && ./gradlew --no-daemon assembleRelease'
+  -w /workspace \
+  react-native-android \
+  sh -c 'yarn install && cd android && ./gradlew --no-daemon --configuration-cache assembleRelease'
