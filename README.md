@@ -30,7 +30,7 @@ Sous WSL, depuis la racine du dépôt, construire l’image Docker avec le tag
 Un petit projet React Native utilisant Gradle se trouve dans
 [examples/android-hello-world](./examples/android-hello-world). Il affiche
 « Bonjour Android ! » et inclut les bibliothèques natives pour les architectures
-`arm64-v8a` et `x86_64`.
+`x86_64`.
 
 Depuis la racine du dépôt, construire l’APK autonome (la variante `release`
 embarque le bundle JavaScript, sans serveur Metro) dans l’image Docker :
