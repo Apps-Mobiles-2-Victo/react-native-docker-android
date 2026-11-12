@@ -44,14 +44,16 @@ afin de le réutiliser entre les exécutions.
 
 Le fichier produit est
 `examples/android-hello-world/android/app/build/outputs/apk/release/app-release.apk`.
-Avec le débogage USB activé et `adb` installé sur l’ordinateur, connecter le
-téléphone puis installer et lancer l’application :
+Pour installer et démarrer l’APK sur l’AVD d’Android Studio depuis WSL, lancer
+l’AVD et rendre le serveur ADB de Windows accessible à WSL, puis exécuter :
 
 ```sh
-adb devices
-adb install -r examples/android-hello-world/android/app/build/outputs/apk/release/app-release.apk
-adb shell am start -n com.androidphonedemo/.MainActivity
+./scripts/run-android-example-wsl.sh
 ```
+
+Le script utilise le serveur ADB Windows à l’adresse de passerelle WSL et au
+port `5037`. Pour plusieurs AVD, choisir celui à utiliser avec
+`ANDROID_SERIAL=emulator-5554 ./scripts/run-android-example-wsl.sh`.
 
 L’APK de test est signé avec la clé de débogage du modèle React Native ; ne pas
 l’utiliser pour une publication.
