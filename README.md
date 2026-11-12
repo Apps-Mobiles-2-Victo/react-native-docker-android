@@ -36,7 +36,7 @@ Depuis la racine du dépôt, construire l’APK autonome (la variante `release`
 embarque le bundle JavaScript, sans serveur Metro) dans l’image Docker :
 
 ```sh
-./scripts/build-android-example-wsl.sh
+./scripts/build-android-app-wsl.sh
 ```
 
 Le script conserve le cache Gradle dans le volume Docker `gradle-home-cache`
@@ -44,16 +44,31 @@ afin de le réutiliser entre les exécutions.
 
 Le fichier produit est
 `examples/android-hello-world/android/app/build/outputs/apk/release/app-release.apk`.
-Pour installer et démarrer l’APK sur l’AVD d’Android Studio depuis WSL, lancer
-l’AVD et rendre le serveur ADB de Windows accessible à WSL, puis exécuter :
+
+Pour installer et démarrer l’APK sur l’AVD d’Android Studio depuis WSL, vous devez exposer le serveur ADB Windows sur le réseau commun entre WSL et Windows. 
+
+Android Studio démarre son propre serveur ADB, qui ne peut pas être utilisé depuis WSL. Pour contourner ce problème, if faut démarrer ADB server nous-même avant que Android Studio ne le fasse.
+
+Donc, à faire une fois par démarrage de votre ordinateur:
+
+* Si Android Studio est ouvert
+    * Le fermer
+    * Vérifier dans le gestionnaire de tâches qu’aucun processus `adb.exe` n’est en cours d’exécution. Si c’est le cas, le tuer.
+* Dans un terminal Windows (ou une commande directement via `Win + R`), démarrer ADB en l’exposant sur toutes les interfaces réseaux (-a):
+
+```powershell
+adb -a start-server
+```
+
+Relancer ensuite Android Studio et l’AVD (émulateur), puis exécuter depuis WSL :
 
 ```sh
-./scripts/run-android-example-wsl.sh
+./scripts/run-android-app-wsl.sh
 ```
 
 Le script utilise le serveur ADB Windows à l’adresse de passerelle WSL et au
 port `5037`. Pour plusieurs AVD, choisir celui à utiliser avec
-`ANDROID_SERIAL=emulator-5554 ./scripts/run-android-example-wsl.sh`.
+`ANDROID_SERIAL=emulator-5554 ./scripts/run-android-app-wsl.sh`.
 
 L’APK de test est signé avec la clé de débogage du modèle React Native ; ne pas
 l’utiliser pour une publication.

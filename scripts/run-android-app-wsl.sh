@@ -3,7 +3,9 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd -- "$SCRIPT_DIR/.." && pwd)"
-APK="$REPO_ROOT/examples/android-hello-world/android/app/build/outputs/apk/release/app-release.apk"
+APP_ROOT="${APP_ROOT:-$REPO_ROOT/examples/android-hello-world}"
+APP_PACKAGE="${APP_PACKAGE:-com.androidphonedemo}"
+APK="$APP_ROOT/android/app/build/outputs/apk/release/app-release.apk"
 ADB_HOST="${ADB_HOST:-$(ip route show default | awk 'NR == 1 { print $3 }')}"
 ADB_PORT="${ADB_PORT:-5037}"
 
@@ -13,7 +15,7 @@ if ! command -v adb >/dev/null 2>&1; then
 fi
 
 if [[ ! -f "$APK" ]]; then
-  echo "APK not found. Build it first with ./scripts/build-android-example-wsl.sh" >&2
+  echo "APK not found. Build it first with ./scripts/build-android-app-wsl.sh" >&2
   exit 1
 fi
 
@@ -53,4 +55,4 @@ else
 fi
 
 "${ADB[@]}" -s "$DEVICE" install -r "$APK"
-"${ADB[@]}" -s "$DEVICE" shell am start -n com.androidphonedemo/.MainActivity
+"${ADB[@]}" -s "$DEVICE" shell am start -n "$APP_PACKAGE/.MainActivity"

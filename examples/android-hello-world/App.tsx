@@ -4,7 +4,7 @@ function App() {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#f4f6f8" />
-      <Text style={styles.title}>Bonjour Android v6 !</Text>
+      <Text style={styles.title}>Bonjour Android v1 !</Text>
       <Text style={styles.subtitle}>Votre application React Native fonctionne.</Text>
     </View>
   );
