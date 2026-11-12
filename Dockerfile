@@ -1,4 +1,4 @@
-FROM ubuntu:22.04
+FROM debian:bookworm-slim
 
 LABEL Description="This image provides a base Android development environment for React Native, and may be used to run tests."
 
@@ -42,7 +42,7 @@ RUN apt update -qq && apt install -qq -y --no-install-recommends \
         git \
         g++ \
         gnupg2 \
-        libc++1-11 \
+        libc++1-14 \
         libgl1 \
         libtcmalloc-minimal4 \
         make \

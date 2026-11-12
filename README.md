@@ -74,8 +74,12 @@ Yarn (version non fixée)
 JDK 17.
 
 docker build .
+
 > time to build on Dell laptop: Intel i7 11800H with 32GB RAM, Docker Desktop:  335s
 > image size: 6.5GB
+
+> basé sur debian bookworm-slim: 285s
+> image size: 6.64 GB rapportés (4.77 GB de layers) - blobs compressés
 
 APK résultant: 
 ~/repos/AppsMobiles2/react-native-docker-android/examples/android-hello-world/android/app/build/outputs/apk/release/app-release.apk
