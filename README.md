@@ -39,7 +39,8 @@ comme le projet d’exemple, afin d’éviter de compiler les bibliothèques nat
 pour plusieurs architectures. Le cache de build Gradle est aussi activé pour
 réutiliser les résultats entre les builds. Pour cibler un appareil physique,
 ajuster `reactNativeArchitectures` dans `android/gradle.properties` (par
-exemple `arm64-v8a`).
+exemple `arm64-v8a`). Ils sont configurés pour Android seulement; les fichiers
+iOS, ESLint et Jest ne sont pas inclus.
 
 Le cache npm est conservé dans le volume Docker `npm-cache`.
 
@@ -63,6 +64,9 @@ dans les volumes Docker `gradle-home-cache`, `android-sdk-cache`, `npm-cache`
 et `yarn-cache`. Les téléchargements sont ainsi réutilisés aux exécutions
 suivantes. L’installation des dépendances suit le fichier de verrouillage du
 projet (`npm ci` pour `package-lock.json`, Yarn pour `yarn.lock`).
+La compilation limite Gradle et les tâches natives à un seul processus de
+travail et plafonne le tas Gradle à 1 Go afin de réduire l’utilisation mémoire,
+au prix d’une compilation plus lente.
 
 Le fichier produit est
 `examples/android-hello-world/android/app/build/outputs/apk/release/app-release.apk`.
@@ -89,8 +93,10 @@ Relancer ensuite Android Studio et l’AVD (émulateur), puis exécuter depuis W
 # ou, sans argument, le script demande le nom du projet
 ```
 
-Le script utilise le serveur ADB Windows à l’adresse de passerelle WSL et au
-port `5037`. Pour plusieurs AVD, choisir celui à utiliser avec
+Le script utilise le serveur ADB Windows à l’adresse `localhost` si
+`networkingMode=mirrored` est configuré dans `[wsl2]` de `.wslconfig`; sinon,
+il utilise l’adresse de passerelle WSL. Le port est `5037`. Pour plusieurs
+AVD, choisir celui à utiliser avec
 `ANDROID_SERIAL=emulator-5554 ./scripts/run-android-app-wsl.sh android-hello-world`.
 
 L’APK de test est signé avec la clé de débogage du modèle React Native ; ne pas

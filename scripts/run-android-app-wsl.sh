@@ -29,7 +29,8 @@ fi
 
 APP_ROOT="${APP_ROOT:-$REPO_ROOT/examples/$PROJECT_NAME}"
 APK="$APP_ROOT/android/app/build/outputs/apk/release/app-release.apk"
-ADB_HOST="${ADB_HOST:-$(ip route show default | awk 'NR == 1 { print $3 }')}"
+source "$SCRIPT_DIR/interne/wsl-adb-host.sh"
+ADB_HOST="${ADB_HOST:-$(get_default_adb_host)}"
 ADB_PORT="${ADB_PORT:-5037}"
 
 if ! command -v adb >/dev/null 2>&1; then

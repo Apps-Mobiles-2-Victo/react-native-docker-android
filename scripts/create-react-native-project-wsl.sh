@@ -97,6 +97,47 @@ if docker run --rm --ulimit nofile=10240 \
     fi
 
     if [ "$status" -eq 0 ]; then
+      # Android-only projects do not need @react-native-community/cli-platform-ios.
+      node - "$1" <<NODE
+const fs = require("node:fs");
+const path = require("node:path");
+
+const projectDir = process.argv[2];
+if (!projectDir) {
+  throw new Error("Missing generated project directory argument.");
+}
+const packagePath = path.join(projectDir, "package.json");
+const packageJson = JSON.parse(fs.readFileSync(packagePath, "utf8"));
+
+for (const script of ["ios", "lint", "test"]) {
+  delete packageJson.scripts[script];
+}
+
+for (const dependency of [
+  "@react-native-community/cli-platform-ios",
+  "@react-native/eslint-config",
+  "@react-native/jest-preset",
+  "@types/jest",
+  "@types/react-test-renderer",
+  "eslint",
+  "jest",
+  "react-test-renderer",
+]) {
+  delete packageJson.devDependencies[dependency];
+}
+
+fs.writeFileSync(packagePath, JSON.stringify(packageJson, null, 2) + "\n");
+NODE
+      status=$?
+    fi
+
+    if [ "$status" -eq 0 ]; then
+      rm -rf "$1/ios" "$1/__tests__"
+      rm -f "$1/jest.config.js" "$1/.eslintrc.js" "$1/eslint.config.js"
+      (cd "$1" && npm install) || status=$?
+    fi
+
+    if [ "$status" -eq 0 ]; then
       gradle_properties="$1/android/gradle.properties"
       if [ ! -f "$gradle_properties" ]; then
         echo "Generated project is missing $gradle_properties." >&2
