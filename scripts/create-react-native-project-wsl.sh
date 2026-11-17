@@ -1,6 +1,45 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+GREEN=""
+GREEN_RESET=""
+RED=""
+if [[ -t 1 ]]; then
+  GREEN=$'\033[0;32m'
+  GREEN_RESET=$'\033[0m'
+fi
+if [[ -t 2 ]]; then
+  RED=$'\033[0;31m'
+  RED_RESET=$'\033[0m'
+fi
+
+print_filesystem_message() {
+  local color="$1"
+  local reset="$2"
+  local message="$3"
+  printf '%s----------------------------------------%s\n' "$color" "$reset"
+  printf '%s%s%s\n' "$color" "$message" "$reset"
+  printf '%s----------------------------------------%s\n' "$color" "$reset"
+}
+
+if ! command -v findmnt >/dev/null 2>&1; then
+  print_filesystem_message "$RED" "$RED_RESET" "Impossible de vérifier le système de fichiers du répertoire courant (findmnt est requis)." >&2
+  exit 1
+fi
+
+CURRENT_FS="$(findmnt -n -o FSTYPE --target "$PWD")"
+if [[ "$CURRENT_FS" != "ext4" ]]; then
+  print_filesystem_message "$RED" "$RED_RESET" "Le répertoire courant doit être sur ext4 (système détecté : ${CURRENT_FS:-inconnu})." >&2
+  exit 1
+fi
+
+print_filesystem_message "$GREEN" "$GREEN_RESET" "Système de fichiers OK : ext4."
+
+show_wsl_memory() {
+  echo "Mémoire WSL - $1"
+  free -h
+}
+
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd -- "$SCRIPT_DIR/.." && pwd)"
 PROJECTS_DIR="$REPO_ROOT/examples"
@@ -38,7 +77,9 @@ if ! command -v docker >/dev/null 2>&1; then
   exit 1
 fi
 
-docker run --rm --ulimit nofile=10240 \
+show_wsl_memory "avant la création du projet"
+
+if docker run --rm --ulimit nofile=10240 \
   --env HOME=/tmp \
   --env PROJECT_UID="$(id -u)" \
   --env PROJECT_GID="$(id -g)" \
@@ -79,4 +120,11 @@ docker run --rm --ulimit nofile=10240 \
       chown -R "$PROJECT_UID:$PROJECT_GID" "$1" || exit 1
     fi
     exit "$status"
-  ' sh "$PROJECT_NAME"
+  ' sh "$PROJECT_NAME"; then
+  DOCKER_STATUS=0
+else
+  DOCKER_STATUS=$?
+fi
+
+show_wsl_memory "après la création du projet"
+exit "$DOCKER_STATUS"
