@@ -50,6 +50,10 @@ docker run --rm --ulimit nofile=10240 \
   sh -c '
     npx @react-native-community/cli@latest init "$1"
     status=$?
+    # Le template RN peut demander un autre NDK que celui installe dans l image
+    if [ -f "$1/android/build.gradle" ]; then
+      sed -i "s/ndkVersion = \".*\"/ndkVersion = \"$(basename "$ANDROID_NDK_HOME")\"/" "$1/android/build.gradle"
+    fi
     if [ -e "$1" ]; then
       chown -R "$PROJECT_UID:$PROJECT_GID" "$1" || exit 1
     fi
