@@ -25,6 +25,17 @@ Sous WSL, depuis la racine du dépôt, construire l’image Docker avec le tag
 ./scripts/build-docker-image-wsl.sh
 ```
 
+Pour créer un nouveau projet React Native dans `examples/` avec cette image,
+fournir son nom en argument ou le saisir lorsque le script le demande :
+
+```sh
+./scripts/create-react-native-project-wsl.sh MonProjet
+# ou
+./scripts/create-react-native-project-wsl.sh
+```
+
+Le cache npm est conservé dans le volume Docker `npm-cache`.
+
 ## Projet de test Hello World Android
 
 Un petit projet React Native utilisant Gradle se trouve dans
@@ -36,11 +47,14 @@ Depuis la racine du dépôt, construire l’APK autonome (la variante `release`
 embarque le bundle JavaScript, sans serveur Metro) dans l’image Docker :
 
 ```sh
-./scripts/build-android-app-wsl.sh
+./scripts/build-android-app-wsl.sh android-hello-world
+# ou, sans argument, le script demande le nom du projet
 ```
 
-Le script conserve le cache Gradle dans le volume Docker `gradle-home-cache`
-afin de le réutiliser entre les exécutions.
+Le script conserve les caches Gradle et Android dans les volumes Docker
+`gradle-home-cache` et `android-sdk-cache`. Les versions du NDK et des
+Build-Tools téléchargées pendant le build sont ainsi réutilisées aux exécutions
+suivantes.
 
 Le fichier produit est
 `examples/android-hello-world/android/app/build/outputs/apk/release/app-release.apk`.
@@ -63,12 +77,13 @@ adb -a start-server
 Relancer ensuite Android Studio et l’AVD (émulateur), puis exécuter depuis WSL :
 
 ```sh
-./scripts/run-android-app-wsl.sh
+./scripts/run-android-app-wsl.sh android-hello-world
+# ou, sans argument, le script demande le nom du projet
 ```
 
 Le script utilise le serveur ADB Windows à l’adresse de passerelle WSL et au
 port `5037`. Pour plusieurs AVD, choisir celui à utiliser avec
-`ANDROID_SERIAL=emulator-5554 ./scripts/run-android-app-wsl.sh`.
+`ANDROID_SERIAL=emulator-5554 ./scripts/run-android-app-wsl.sh android-hello-world`.
 
 L’APK de test est signé avec la clé de débogage du modèle React Native ; ne pas
 l’utiliser pour une publication.
