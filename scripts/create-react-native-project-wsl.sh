@@ -54,6 +54,27 @@ docker run --rm --ulimit nofile=10240 \
     if [ -f "$1/android/build.gradle" ]; then
       sed -i "s/ndkVersion = \".*\"/ndkVersion = \"$(basename "$ANDROID_NDK_HOME")\"/" "$1/android/build.gradle"
     fi
+
+    if [ "$status" -eq 0 ]; then
+      gradle_properties="$1/android/gradle.properties"
+      if [ ! -f "$gradle_properties" ]; then
+        echo "Generated project is missing $gradle_properties." >&2
+        status=1
+      elif grep -q "^reactNativeArchitectures=" "$gradle_properties"; then
+        sed -i "s/^reactNativeArchitectures=.*/reactNativeArchitectures=x86_64/" "$gradle_properties" || status=$?
+      else
+        printf "\nreactNativeArchitectures=x86_64\n" >> "$gradle_properties" || status=$?
+      fi
+
+      if [ "$status" -eq 0 ]; then
+        if grep -q "^org.gradle.caching=" "$gradle_properties"; then
+          sed -i "s/^org.gradle.caching=.*/org.gradle.caching=true/" "$gradle_properties" || status=$?
+        else
+          printf "\norg.gradle.caching=true\n" >> "$gradle_properties" || status=$?
+        fi
+      fi
+    fi
+
     if [ -e "$1" ]; then
       chown -R "$PROJECT_UID:$PROJECT_GID" "$1" || exit 1
     fi

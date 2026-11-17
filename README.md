@@ -34,6 +34,13 @@ fournir son nom en argument ou le saisir lorsque le script le demande :
 ./scripts/create-react-native-project-wsl.sh
 ```
 
+Les projets générés sont configurés pour compiler uniquement l’ABI `x86_64`,
+comme le projet d’exemple, afin d’éviter de compiler les bibliothèques natives
+pour plusieurs architectures. Le cache de build Gradle est aussi activé pour
+réutiliser les résultats entre les builds. Pour cibler un appareil physique,
+ajuster `reactNativeArchitectures` dans `android/gradle.properties` (par
+exemple `arm64-v8a`).
+
 Le cache npm est conservé dans le volume Docker `npm-cache`.
 
 ## Projet de test Hello World Android
