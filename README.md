@@ -67,6 +67,10 @@ parallèle et limiter l’utilisation mémoire :
 ./scripts/build-android-app-wsl.sh --no-parallel android-hello-world
 ```
 
+La compilation Release s’exécute en deux invocations Gradle : les bibliothèques
+natives d’abord, puis l’APK. Chaque invocation utilise `--no-daemon`, ce qui
+libère la mémoire du processus Gradle entre les deux étapes.
+
 Le script conserve les caches Gradle, Android et des gestionnaires de paquets
 dans les volumes Docker `gradle-home-cache`, `android-sdk-cache`, `npm-cache`
 et `yarn-cache`. Les téléchargements sont ainsi réutilisés aux exécutions

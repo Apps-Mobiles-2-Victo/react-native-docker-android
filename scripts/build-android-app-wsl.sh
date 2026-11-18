@@ -117,7 +117,7 @@ if docker run --rm --ulimit nofile=10240 \
   -v "$APP_ROOT:/workspace" \
   -w /workspace \
   react-native-android \
-  sh -c 'if [ -f package-lock.json ]; then npm ci; elif [ -f yarn.lock ]; then yarn install --frozen-lockfile; else yarn install; fi && cd android && ./gradlew --no-daemon --configuration-cache "$@" -Dorg.gradle.jvmargs="-Xmx1024m -XX:MaxMetaspaceSize=384m" assembleRelease' sh "${GRADLE_PARALLEL_ARGS[@]}"; then
+  sh -c 'if [ -f package-lock.json ]; then npm ci; elif [ -f yarn.lock ]; then yarn install --frozen-lockfile; else yarn install; fi && cd android && ./gradlew --no-daemon --configuration-cache "$@" -Dorg.gradle.jvmargs="-Xmx1024m -XX:MaxMetaspaceSize=384m" ":app:buildCMakeRelWithDebInfo[x86_64]" && ./gradlew --no-daemon --configuration-cache "$@" -Dorg.gradle.jvmargs="-Xmx1024m -XX:MaxMetaspaceSize=384m" -x ":app:buildCMakeRelWithDebInfo[x86_64]" assembleRelease' sh "${GRADLE_PARALLEL_ARGS[@]}"; then
   DOCKER_STATUS=0
 else
   DOCKER_STATUS=$?
