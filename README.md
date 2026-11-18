@@ -59,14 +59,21 @@ embarque le bundle JavaScript, sans serveur Metro) dans l’image Docker :
 # ou, sans argument, le script demande le nom du projet
 ```
 
+Par défaut, Gradle et la compilation native utilisent deux processus de
+travail en parallèle. Ajouter `--no-parallel` pour désactiver la compilation
+parallèle et limiter l’utilisation mémoire :
+
+```sh
+./scripts/build-android-app-wsl.sh --no-parallel android-hello-world
+```
+
 Le script conserve les caches Gradle, Android et des gestionnaires de paquets
 dans les volumes Docker `gradle-home-cache`, `android-sdk-cache`, `npm-cache`
 et `yarn-cache`. Les téléchargements sont ainsi réutilisés aux exécutions
 suivantes. L’installation des dépendances suit le fichier de verrouillage du
-projet (`npm ci` pour `package-lock.json`, Yarn pour `yarn.lock`).
-La compilation limite Gradle et les tâches natives à un seul processus de
-travail et plafonne le tas Gradle à 1 Go afin de réduire l’utilisation mémoire,
-au prix d’une compilation plus lente.
+projet (`npm ci` pour `package-lock.json`, Yarn pour `yarn.lock`). Avec
+`--no-parallel`, Gradle et les tâches natives utilisent un seul processus de
+travail. Le tas Gradle est plafonné à 1 Go dans les deux modes.
 
 Le fichier produit est
 `examples/android-hello-world/android/app/build/outputs/apk/release/app-release.apk`.

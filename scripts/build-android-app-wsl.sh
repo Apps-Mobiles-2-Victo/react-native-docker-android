@@ -43,14 +43,36 @@ show_wsl_memory() {
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd -- "$SCRIPT_DIR/.." && pwd)"
 
-if [[ "$#" -gt 1 ]]; then
-  echo "Usage: $0 [ProjectName]" >&2
-  exit 1
-fi
+PARALLEL_BUILD=1
+PARALLEL_OPTION=""
+PROJECT_NAME=""
+for arg in "$@"; do
+  case "$arg" in
+    --parallel|--no-parallel)
+      if [[ -n "$PARALLEL_OPTION" && "$PARALLEL_OPTION" != "$arg" ]]; then
+        echo "Usage: $0 [--parallel|--no-parallel] [ProjectName]" >&2
+        exit 1
+      fi
+      PARALLEL_OPTION="$arg"
+      if [[ "$arg" == "--no-parallel" ]]; then
+        PARALLEL_BUILD=0
+      fi
+      ;;
+    -*)
+      echo "Usage: $0 [--parallel|--no-parallel] [ProjectName]" >&2
+      exit 1
+      ;;
+    *)
+      if [[ -n "$PROJECT_NAME" ]]; then
+        echo "Usage: $0 [--parallel|--no-parallel] [ProjectName]" >&2
+        exit 1
+      fi
+      PROJECT_NAME="$arg"
+      ;;
+  esac
+done
 
-if [[ "$#" -eq 1 ]]; then
-  PROJECT_NAME="$1"
-else
+if [[ -z "$PROJECT_NAME" ]]; then
   if [[ ! -t 0 ]]; then
     echo "Provide a project name as an argument when running non-interactively." >&2
     exit 1
@@ -59,6 +81,14 @@ else
     echo "Could not read the project name." >&2
     exit 1
   fi
+fi
+
+if [[ "$PARALLEL_BUILD" -eq 1 ]]; then
+  GRADLE_PARALLEL_ARGS=(--parallel --max-workers=2)
+  CMAKE_BUILD_PARALLEL_LEVEL=2
+else
+  GRADLE_PARALLEL_ARGS=(--max-workers=1 --no-parallel)
+  CMAKE_BUILD_PARALLEL_LEVEL=1
 fi
 
 if [[ -z "$PROJECT_NAME" || "$PROJECT_NAME" == "." || "$PROJECT_NAME" == ".." || "$PROJECT_NAME" == */* ]]; then
@@ -83,11 +113,11 @@ if docker run --rm --ulimit nofile=10240 \
   -v yarn-cache:/yarn-cache \
   --env npm_config_cache=/npm-cache \
   --env YARN_CACHE_FOLDER=/yarn-cache \
-  --env CMAKE_BUILD_PARALLEL_LEVEL=1 \
+  --env CMAKE_BUILD_PARALLEL_LEVEL="$CMAKE_BUILD_PARALLEL_LEVEL" \
   -v "$APP_ROOT:/workspace" \
   -w /workspace \
   react-native-android \
-  sh -c 'if [ -f package-lock.json ]; then npm ci; elif [ -f yarn.lock ]; then yarn install --frozen-lockfile; else yarn install; fi && cd android && ./gradlew --no-daemon --configuration-cache --max-workers=1 --no-parallel -Dorg.gradle.jvmargs="-Xmx1024m -XX:MaxMetaspaceSize=384m" assembleRelease'; then
+  sh -c 'if [ -f package-lock.json ]; then npm ci; elif [ -f yarn.lock ]; then yarn install --frozen-lockfile; else yarn install; fi && cd android && ./gradlew --no-daemon --configuration-cache "$@" -Dorg.gradle.jvmargs="-Xmx1024m -XX:MaxMetaspaceSize=384m" assembleRelease' sh "${GRADLE_PARALLEL_ARGS[@]}"; then
   DOCKER_STATUS=0
 else
   DOCKER_STATUS=$?

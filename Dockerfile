@@ -13,7 +13,6 @@ ARG ANDROID_BUILD_VERSION=37.0
 ARG ANDROID_TOOLS_VERSION=37.0.0
 ARG NDK_VERSION=28.2.13676358
 ARG NODE_VERSION=22.14
-ARG WATCHMAN_VERSION=4.9.0
 ARG CMAKE_VERSION=3.22.1
 ARG GRADLE_VERSION=9.4.1
 
@@ -35,7 +34,6 @@ ENV LC_ALL=C.UTF8
 
 # Install system dependencies
 RUN apt update -qq && apt install -qq -y --no-install-recommends \
-        apt-transport-https \
         curl \
         file \
         gcc \
@@ -52,20 +50,13 @@ RUN apt update -qq && apt install -qq -y --no-install-recommends \
         python3 \
         python3-distutils \
         rsync \
-        ruby \
-        ruby-dev \
         tzdata \
         unzip \
-        sudo \
         ninja-build \
         zip \
         ccache \
         # Dev libraries requested by Hermes
         libicu-dev \
-        # Dev dependencies required by linters
-        jq \
-        shellcheck \
-    && gem install bundler \
     && rm -rf /var/lib/apt/lists/*;
 
 # Seed the Gradle Wrapper cache used by React Native builds. GitHub Actions
