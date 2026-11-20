@@ -67,9 +67,24 @@ parallèle et limiter l’utilisation mémoire :
 ./scripts/build-android-app-wsl.sh --no-parallel android-hello-world
 ```
 
-La compilation Release s’exécute en deux invocations Gradle : les bibliothèques
-natives d’abord, puis l’APK. Chaque invocation utilise `--no-daemon`, ce qui
-libère la mémoire du processus Gradle entre les deux étapes.
+Par défaut, le script construit un APK Release. Utiliser `--debug` pour
+construire la variante Debug :
+
+```sh
+./scripts/build-android-app-wsl.sh --debug android-hello-world
+```
+
+L'APK Debug est produit dans
+`examples/android-hello-world/android/app/build/outputs/apk/debug/app-debug.apk`.
+Cette commande inclut le bundle JavaScript dans l'APK et désactive le support
+de développement React Native pour que l'application démarre sans Metro. Le
+menu de développement et React Native DevTools ne sont donc pas disponibles
+dans cet APK autonome.
+
+Les compilations Release et Debug s’exécutent en deux invocations Gradle : les
+bibliothèques natives d’abord, puis l’APK. Chaque invocation utilise
+`--no-daemon`, ce qui libère la mémoire du processus Gradle entre les deux
+étapes.
 
 Le script conserve les caches Gradle, Android et des gestionnaires de paquets
 dans les volumes Docker `gradle-home-cache`, `android-sdk-cache`, `npm-cache`
@@ -102,6 +117,13 @@ Relancer ensuite Android Studio et l’AVD (émulateur), puis exécuter depuis W
 ```sh
 ./scripts/run-android-app-wsl.sh android-hello-world
 # ou, sans argument, le script demande le nom du projet
+```
+
+Pour installer et démarrer l'APK Debug, le construire d'abord avec
+`./scripts/build-android-app-wsl.sh --debug android-hello-world`, puis lancer :
+
+```sh
+./scripts/run-android-app-wsl.sh --debug android-hello-world
 ```
 
 Le script utilise le serveur ADB Windows à l’adresse `localhost` si

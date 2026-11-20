@@ -4,14 +4,28 @@ set -euo pipefail
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd -- "$SCRIPT_DIR/.." && pwd)"
 
-if [[ "$#" -gt 1 ]]; then
-  echo "Usage: $0 [ProjectName]" >&2
-  exit 1
-fi
+BUILD_VARIANT="Release"
+PROJECT_NAME=""
+for arg in "$@"; do
+  case "$arg" in
+    --debug)
+      BUILD_VARIANT="Debug"
+      ;;
+    -*)
+      echo "Usage: $0 [--debug] [ProjectName]" >&2
+      exit 1
+      ;;
+    *)
+      if [[ -n "$PROJECT_NAME" ]]; then
+        echo "Usage: $0 [--debug] [ProjectName]" >&2
+        exit 1
+      fi
+      PROJECT_NAME="$arg"
+      ;;
+  esac
+done
 
-if [[ "$#" -eq 1 ]]; then
-  PROJECT_NAME="$1"
-else
+if [[ -z "$PROJECT_NAME" ]]; then
   if [[ ! -t 0 ]]; then
     echo "Provide a project name as an argument when running non-interactively." >&2
     exit 1
@@ -28,7 +42,11 @@ if [[ -z "$PROJECT_NAME" || "$PROJECT_NAME" == "." || "$PROJECT_NAME" == ".." ||
 fi
 
 APP_ROOT="${APP_ROOT:-$REPO_ROOT/examples/$PROJECT_NAME}"
-APK="$APP_ROOT/android/app/build/outputs/apk/release/app-release.apk"
+if [[ "$BUILD_VARIANT" == "Debug" ]]; then
+  APK="$APP_ROOT/android/app/build/outputs/apk/debug/app-debug.apk"
+else
+  APK="$APP_ROOT/android/app/build/outputs/apk/release/app-release.apk"
+fi
 source "$SCRIPT_DIR/interne/wsl-adb-host.sh"
 ADB_HOST="${ADB_HOST:-$(get_default_adb_host)}"
 ADB_PORT="${ADB_PORT:-5037}"
@@ -44,7 +62,11 @@ if [[ ! -d "$APP_ROOT" ]]; then
 fi
 
 if [[ ! -f "$APK" ]]; then
-  echo "APK not found. Build it first with ./scripts/build-android-app-wsl.sh $PROJECT_NAME" >&2
+  BUILD_COMMAND="./scripts/build-android-app-wsl.sh"
+  if [[ "$BUILD_VARIANT" == "Debug" ]]; then
+    BUILD_COMMAND+=" --debug"
+  fi
+  echo "APK not found. Build it first with $BUILD_COMMAND $PROJECT_NAME" >&2
   exit 1
 fi
 

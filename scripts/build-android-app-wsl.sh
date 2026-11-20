@@ -45,12 +45,16 @@ REPO_ROOT="$(cd -- "$SCRIPT_DIR/.." && pwd)"
 
 PARALLEL_BUILD=1
 PARALLEL_OPTION=""
+BUILD_VARIANT="Release"
 PROJECT_NAME=""
 for arg in "$@"; do
   case "$arg" in
+    --debug)
+      BUILD_VARIANT="Debug"
+      ;;
     --parallel|--no-parallel)
       if [[ -n "$PARALLEL_OPTION" && "$PARALLEL_OPTION" != "$arg" ]]; then
-        echo "Usage: $0 [--parallel|--no-parallel] [ProjectName]" >&2
+        echo "Usage: $0 [--debug] [--parallel|--no-parallel] [ProjectName]" >&2
         exit 1
       fi
       PARALLEL_OPTION="$arg"
@@ -59,12 +63,12 @@ for arg in "$@"; do
       fi
       ;;
     -*)
-      echo "Usage: $0 [--parallel|--no-parallel] [ProjectName]" >&2
+      echo "Usage: $0 [--debug] [--parallel|--no-parallel] [ProjectName]" >&2
       exit 1
       ;;
     *)
       if [[ -n "$PROJECT_NAME" ]]; then
-        echo "Usage: $0 [--parallel|--no-parallel] [ProjectName]" >&2
+        echo "Usage: $0 [--debug] [--parallel|--no-parallel] [ProjectName]" >&2
         exit 1
       fi
       PROJECT_NAME="$arg"
@@ -91,6 +95,11 @@ else
   CMAKE_BUILD_PARALLEL_LEVEL=1
 fi
 
+GRADLE_BUILD_ARGS=("${GRADLE_PARALLEL_ARGS[@]}")
+if [[ "$BUILD_VARIANT" == "Debug" ]]; then
+  GRADLE_BUILD_ARGS+=(-PbundleDebugJs=true)
+fi
+
 if [[ -z "$PROJECT_NAME" || "$PROJECT_NAME" == "." || "$PROJECT_NAME" == ".." || "$PROJECT_NAME" == */* ]]; then
   echo "The project name must be a non-empty name without path separators." >&2
   exit 1
@@ -102,7 +111,12 @@ if [[ ! -d "$APP_ROOT" ]]; then
   exit 1
 fi
 
-echo "Building Release APK for $PROJECT_NAME..."
+CMAKE_BUILD_TASK=":app:buildCMakeRelWithDebInfo[x86_64]"
+if [[ "$BUILD_VARIANT" == "Debug" ]]; then
+  CMAKE_BUILD_TASK=":app:buildCMakeDebug[x86_64]"
+fi
+
+echo "Building $BUILD_VARIANT APK for $PROJECT_NAME..."
 
 show_wsl_memory "avant la compilation"
 
@@ -114,10 +128,12 @@ if docker run --rm --ulimit nofile=10240 \
   --env npm_config_cache=/npm-cache \
   --env YARN_CACHE_FOLDER=/yarn-cache \
   --env CMAKE_BUILD_PARALLEL_LEVEL="$CMAKE_BUILD_PARALLEL_LEVEL" \
+  --env BUILD_VARIANT="$BUILD_VARIANT" \
+  --env CMAKE_BUILD_TASK="$CMAKE_BUILD_TASK" \
   -v "$APP_ROOT:/workspace" \
   -w /workspace \
   react-native-android \
-  sh -c 'if [ -f package-lock.json ]; then npm ci; elif [ -f yarn.lock ]; then yarn install --frozen-lockfile; else yarn install; fi && cd android && ./gradlew --no-daemon --configuration-cache "$@" -Dorg.gradle.jvmargs="-Xmx1024m -XX:MaxMetaspaceSize=384m" ":app:buildCMakeRelWithDebInfo[x86_64]" && ./gradlew --no-daemon --configuration-cache "$@" -Dorg.gradle.jvmargs="-Xmx1024m -XX:MaxMetaspaceSize=384m" -x ":app:buildCMakeRelWithDebInfo[x86_64]" assembleRelease' sh "${GRADLE_PARALLEL_ARGS[@]}"; then
+  sh -c 'if [ -f package-lock.json ]; then npm ci; elif [ -f yarn.lock ]; then yarn install --frozen-lockfile; else yarn install; fi && cd android && ./gradlew --no-daemon --configuration-cache "$@" -Dorg.gradle.jvmargs="-Xmx1024m -XX:MaxMetaspaceSize=384m" "$CMAKE_BUILD_TASK" && ./gradlew --no-daemon --configuration-cache "$@" -Dorg.gradle.jvmargs="-Xmx1024m -XX:MaxMetaspaceSize=384m" -x "$CMAKE_BUILD_TASK" "assemble$BUILD_VARIANT"' sh "${GRADLE_BUILD_ARGS[@]}"; then
   DOCKER_STATUS=0
 else
   DOCKER_STATUS=$?
